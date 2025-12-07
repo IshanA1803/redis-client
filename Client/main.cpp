@@ -1,4 +1,6 @@
 #include<iostream>
+#include "CLI.h"
+#include <string>
 
 int main(int argc,char* argv[]){
     std::string host="127.0.0.1"; //default host
@@ -16,4 +18,8 @@ int main(int argc,char* argv[]){
         }
         i++;
     }
+
+    CLI cli(host,port);
+    cli.run();
+    return 0;
 }
