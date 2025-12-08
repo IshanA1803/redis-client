@@ -45,3 +45,7 @@ void RedisClient::disconnect() {
         sockfd = -1;
     }
 }
+
+int RedisClient::getSocketFD() const {
+    return sockfd;
+}
