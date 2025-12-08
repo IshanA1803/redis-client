@@ -7,6 +7,6 @@ void CLI::run() {
     if (!redisClient.connectToServer()) {
         return;
     }
-
-    std::cout << "Connected to Redis\n" ;
+    int sockfd = redisClient.getSocketFD();
+    std::cout << "Connected to Redis at "<< sockfd << "\n";
 }
