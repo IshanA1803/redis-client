@@ -42,9 +42,14 @@ void CLI::run() {
         std::vector<std::string> args = CommandHandler::splitArgs(line);
         if(args.empty()) continue; // No valid command found
 
-        for (const auto &arg : args) { 
-            std::cout << arg << "\n";
+        // Build RESP command from tokens
+        std::string command = CommandHandler::buildRESPcommand(args);
+        // Send command to Redis server
+        if (!redisClient.sendCommand(command)) {
+            std::cerr << "(Error) Failed to send command.\n";
+            break;
         }
+        // Parse and print response will be handled here
     }
 
 }
