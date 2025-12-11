@@ -1,5 +1,6 @@
 #include "CommandHandler.h"
 #include <regex>
+#include <sstream>
 
 // Splits the input string into tokens, handling quoted substrings as single tokens
 std::vector<std::string> CommandHandler::splitArgs(const std::string &input) {
@@ -21,4 +22,21 @@ std::vector<std::string> CommandHandler::splitArgs(const std::string &input) {
     }
 
     return tokens;
+}
+
+// Builds a RESP formatted command from the given tokens
+/*
+    RESP format:
+    *<number of args>\r\n
+    $<len of arg1>\r\n
+    <arg1>\r\n
+*/
+std::string CommandHandler::buildRESPcommand(const std::vector<std::string> &args) {
+    std::ostringstream oss; // use stringstream for efficient string building
+    oss << "*" << args.size() << "\r\n"; // number of args
+
+    for (const auto &arg: args) {
+        oss << "$" << arg.size() << "\r\n" << arg << "\r\n"; // len and value of arg
+    }
+    return oss.str(); 
 }
