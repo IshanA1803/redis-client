@@ -49,7 +49,9 @@ void CLI::run() {
             std::cerr << "(Error) Failed to send command.\n";
             break;
         }
-        // Parse and print response will be handled here
+        // Parse and print response
+        std::string response = ResponseParser::parseResponse(sockfd);
+        std::cout << response << "\n";
     }
-
+    redisClient.disconnect();
 }
