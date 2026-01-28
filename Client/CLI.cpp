@@ -1,5 +1,7 @@
 #include "CLI.h"
 #include <vector>
+#include <readline/readline.h>
+#include <readline/history.h>
 
 //Helper function to trim whitespaces
 static std::string trim(const std::string &s) {
@@ -23,10 +25,13 @@ void CLI::run() {
     int port = 6379; //Dummy port
 
     while (true) {
-        std::cout << host  << ":" << port << "> ";
-        std::cout.flush(); // Ensure prompt is displayed immediately
-        std::string line;
-        if (!std::getline(std::cin, line)) break; 
+        char* input = readline((host + ":" + std::to_string(port) + "> ").c_str());
+        if (!input) { // EOF detected
+            std::cout << "Goodbye.\n";
+            break;
+        }
+        std::string line(input); // Convert C-string to std::string
+        free(input); // Free the allocated memory by readline
         line = trim(line);
         if(line.empty()) continue; // Ignore empty lines
         if (line == "quit") {
