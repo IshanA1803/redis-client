@@ -3,6 +3,8 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <poll.h>
+#include <algorithm>
+#include <cctype>
 
 static bool lineReady = false;
 static std::string latestInput = "";
@@ -59,7 +61,7 @@ void CLI::run() {
             perror("(Error) poll failed");
             break;
         }
-        
+
         // Redis socket error or hangup
         if (fds[1].revents & (POLLHUP | POLLERR)) {
             std::cout << "\nRedis connection lost. Exiting...\n";
@@ -103,6 +105,14 @@ void CLI::run() {
                 rl_redisplay();
                 continue;
             }
+            
+            std::string firstCmd = args[0];
+            std::transform(firstCmd.begin(), firstCmd.end(), firstCmd.begin(), ::toupper);
+
+            if (firstCmd == "SUBSCRIBE") {
+                handleSubscription(args);
+                continue;
+            }
 
             std::string command = CommandHandler::buildRESPcommand(args);
             if (!redisClient.sendCommand(command)) {
@@ -121,4 +131,8 @@ void CLI::run() {
 
     rl_callback_handler_remove();
     redisClient.disconnect();
+}
+
+void CLI::handleSubscription(const std::vector<std::string>& args) {
+    std::cout << "Stub for SUBSCRIBE Mode.\n";
 }
