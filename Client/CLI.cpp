@@ -42,58 +42,71 @@ void CLI::run() {
     std::string host = "127.0.0.1"; //Dummy host
     int port = 6379; //Dummy port
 
-    // Setup poll for stdin
-    struct pollfd fds[1];
-    fds[0].fd = STDIN_FILENO;   // terminal input
+    // Setup poll for stdin and redis socket
+    struct pollfd fds[2];
+    fds[0].fd = STDIN_FILENO;  // terminal
     fds[0].events = POLLIN;
+
+    fds[1].fd = sockfd;       // redis socket
+    fds[1].events = POLLIN;
 
     // Initialize readline in callback mode
     rl_callback_handler_install((host + ":" + std::to_string(port) + "> ").c_str(),handleLine);
 
     while (true) {
-        int ret = poll(fds, 1, -1);  // block indefinitely
+        int ret = poll(fds, 2, -1);  // block indefinitely
         if (ret < 0) {
             perror("(Error) poll failed");
             break;
         }
-    
+        // I fRedis socket is readable then check for server closure
+        if (fds[1].revents & POLLIN) {
+            char buffer[1];
+            ssize_t bytes = recv(sockfd, buffer, sizeof(buffer), MSG_PEEK);
+        
+            if (bytes == 0) {
+                std::cout << "\nRedis server closed the connection. Exiting...\n";
+                break;
+            }
+        }
+
         if (fds[0].revents & POLLIN) {
             rl_callback_read_char();
         }
-    
+
         if (lineReady) {
             std::string line = trim(latestInput);
             lineReady = false;
-        
+
             if (line == "quit" || line == "exit") {
                 std::cout << "Goodbye.\n";
                 break;
             }
-        
+
             if (line == "help") {
                 std::cout << "Displaing help\n";
                 rl_on_new_line();
                 rl_redisplay();
                 continue;
             }
-        
+
             std::vector<std::string> args = CommandHandler::splitArgs(line);
             if (args.empty()) {
                 rl_on_new_line();
                 rl_redisplay();
                 continue;
             }
-        
+
             std::string command = CommandHandler::buildRESPcommand(args);
             if (!redisClient.sendCommand(command)) {
                 std::cerr << "(Error) Failed to send command.\n";
                 break;
             }
-        
+
             std::string response =
                 ResponseParser::parseResponse(redisClient.getSocketFD());
             std::cout << response << "\n";
-        
+
             rl_on_new_line();
             rl_redisplay();
         }
