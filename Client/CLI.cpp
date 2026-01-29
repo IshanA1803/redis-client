@@ -2,6 +2,7 @@
 #include <vector>
 #include <readline/readline.h>
 #include <readline/history.h>
+#include <poll.h>
 
 static bool lineReady = false;
 static std::string latestInput = "";
@@ -41,51 +42,63 @@ void CLI::run() {
     std::string host = "127.0.0.1"; //Dummy host
     int port = 6379; //Dummy port
 
+    // Setup poll for stdin
+    struct pollfd fds[1];
+    fds[0].fd = STDIN_FILENO;   // terminal input
+    fds[0].events = POLLIN;
+
+    // Initialize readline in callback mode
     rl_callback_handler_install((host + ":" + std::to_string(port) + "> ").c_str(),handleLine);
 
     while (true) {
-        // Let readline process one character if available
-        rl_callback_read_char();
-
-        // If a full line was entered (Enter pressed)
+        int ret = poll(fds, 1, -1);  // block indefinitely
+        if (ret < 0) {
+            perror("(Error) poll failed");
+            break;
+        }
+    
+        if (fds[0].revents & POLLIN) {
+            rl_callback_read_char();
+        }
+    
         if (lineReady) {
             std::string line = trim(latestInput);
             lineReady = false;
-
+        
             if (line == "quit" || line == "exit") {
                 std::cout << "Goodbye.\n";
                 break;
             }
-
+        
             if (line == "help") {
                 std::cout << "Displaing help\n";
+                rl_on_new_line();
+                rl_redisplay();
                 continue;
             }
-
-            // Split command into tokens
+        
             std::vector<std::string> args = CommandHandler::splitArgs(line);
             if (args.empty()) {
+                rl_on_new_line();
+                rl_redisplay();
                 continue;
             }
-
-            // Build RESP command
+        
             std::string command = CommandHandler::buildRESPcommand(args);
-
-            // Send to Redis
             if (!redisClient.sendCommand(command)) {
                 std::cerr << "(Error) Failed to send command.\n";
                 break;
             }
-
-            // Parse and print response
+        
             std::string response =
                 ResponseParser::parseResponse(redisClient.getSocketFD());
             std::cout << response << "\n";
+        
             rl_on_new_line();
             rl_redisplay();
-
         }
     }
+
     rl_callback_handler_remove();
     redisClient.disconnect();
 }
