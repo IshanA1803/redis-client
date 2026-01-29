@@ -59,7 +59,14 @@ void CLI::run() {
             perror("(Error) poll failed");
             break;
         }
-        // I fRedis socket is readable then check for server closure
+        
+        // Redis socket error or hangup
+        if (fds[1].revents & (POLLHUP | POLLERR)) {
+            std::cout << "\nRedis connection lost. Exiting...\n";
+            break;
+        }
+
+        // If Redis socket is readable then check for server closure
         if (fds[1].revents & POLLIN) {
             char buffer[1];
             ssize_t bytes = recv(sockfd, buffer, sizeof(buffer), MSG_PEEK);
