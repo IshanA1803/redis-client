@@ -45,11 +45,17 @@ Execute a single Redis command directly from the shell:
 ## Project Structure
 
 Client/
+
 ├── main.cpp            # Argument parsing and entry point
+
 ├── CLI.\*     		# REPL, event loop, pub/sub handling
+
 ├── RedisClient.\*       # TCP connection management
+
 ├── CommandHandler.\*    # Command parsing and RESP formatting
+
 ├── ResponseParser.\*    # RESP2 response parsing
+
 Makefile
 
 ## Build
@@ -81,7 +87,9 @@ bin/my\_redis\_cli
 Example:
 
 127.0.0.1:6379> PING
+
 PONG
+
 127.0.0.1:6379>
 
 ### One-Shot Mode
