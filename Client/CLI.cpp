@@ -110,7 +110,12 @@ void CLI::run() {
             std::transform(firstCmd.begin(), firstCmd.end(), firstCmd.begin(), ::toupper);
 
             if (firstCmd == "SUBSCRIBE") {
+                rl_callback_handler_remove();
                 handleSubscription(args);
+                rl_callback_handler_install(
+                    (host + ":" + std::to_string(port) + "> ").c_str(),
+                    handleLine
+                );
                 continue;
             }
 
@@ -134,5 +139,82 @@ void CLI::run() {
 }
 
 void CLI::handleSubscription(const std::vector<std::string>& args) {
-    std::cout << "Stub for SUBSCRIBE Mode.\n";
+    std::string command = CommandHandler::buildRESPcommand(args);
+    if (!redisClient.sendCommand(command)) {
+        std::cerr << "(Error) Failed to send SUBSCRIBE command.\n";
+        return;
+    }
+
+    std::cout << "(Subscribed) Type 'exit' or 'quit' to leave subscription mode.\n";
+
+    int sockfd = redisClient.getSocketFD();
+
+    struct pollfd fds[2];
+    fds[0].fd = STDIN_FILENO;  // terminal
+    fds[0].events = POLLIN;
+
+    fds[1].fd = sockfd;       // redis
+    fds[1].events = POLLIN;
+
+    // readline without prompt during subscription
+    rl_callback_handler_install("", handleLine);
+
+    bool inSubscription = true;
+    while (inSubscription) {
+        int ret = poll(fds, 2, 100);  // short timeout
+        if (ret < 0) {
+            perror("(Error) poll failed");
+            break;
+        }
+
+        // Redis error or disconnect
+        if (fds[1].revents & (POLLHUP | POLLERR)) {
+            std::cout << "\nRedis connection lost. Exiting...\n";
+            rl_callback_handler_remove();
+            exit(1);
+        }
+
+        // Redis message available
+        if (fds[1].revents & POLLIN) {
+            try {
+                std::string message =
+                    ResponseParser::parseResponse(sockfd);
+                std::cout << message << std::endl;
+            } catch (...) {
+                std::cerr << "(Error) Failed to parse pub/sub message.\n";
+                rl_callback_handler_remove();
+                exit(1);
+            }
+        }
+
+        // User input
+        if (fds[0].revents & POLLIN) {
+            rl_callback_read_char();
+        }
+
+        // Full line entered
+        if (lineReady) {
+            std::string input = trim(latestInput);
+            lineReady = false;
+
+            if (input == "exit" || input == "quit") {
+                std::vector<std::string> unsub = {"UNSUBSCRIBE"};
+                std::string unsubCmd =
+                    CommandHandler::buildRESPcommand(unsub);
+                redisClient.sendCommand(unsubCmd);
+                    // Drain unsubscribe response
+                try {
+                    ResponseParser::parseResponse(sockfd);
+                } catch (...) {
+                    // ignore, connection may close
+                }
+                inSubscription = false;
+            } else {
+                std::cout<< "(Info) Type 'exit' or 'quit' to leave subscription mode.\n";
+            }
+        }
+    }
+
+    rl_callback_handler_remove();
+    std::cout << "(Exited subscription mode)\n";
 }
