@@ -34,10 +34,19 @@ static std::string trim(const std::string &s) {
 CLI::CLI(const std::string &host, int port) 
     : redisClient(host, port) {}
 
-void CLI::run() {
+void CLI::run(const std::vector<std::string>& commandArgs) {
     if (!redisClient.connectToServer()) {
         return;
     }
+
+    // ONE-SHOT MODE
+    if (!commandArgs.empty()) {
+        executeCommand(commandArgs);
+        redisClient.disconnect();
+        return;
+    }
+
+    // INTERACTIVE MODE
     int sockfd = redisClient.getSocketFD();
     std::cout << "Connected to Redis at "<< sockfd << "\n";
 
@@ -217,4 +226,21 @@ void CLI::handleSubscription(const std::vector<std::string>& args) {
 
     rl_callback_handler_remove();
     std::cout << "(Exited subscription mode)\n";
+}
+
+void CLI::executeCommand(const std::vector<std::string>& args) {
+    if (args.empty()) return;
+
+    std::string command = CommandHandler::buildRESPcommand(args);
+    if (!redisClient.sendCommand(command)) {
+        std::cerr << "(Error) Failed to send command.\n";
+        return;
+    }
+
+    try {
+        std::string response =ResponseParser::parseResponse(redisClient.getSocketFD());
+        std::cout << response << "\n";
+    } catch (...) {
+        std::cerr << "(Error) Failed to parse response.\n";
+    }
 }

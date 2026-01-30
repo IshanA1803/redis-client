@@ -9,8 +9,9 @@
 class CLI {
 public:
     CLI(const std::string &host, int port);
-    void run();
+    void run(const std::vector<std::string>& commandArgs);
     void handleSubscription(const std::vector<std::string>& commandArgs);
+    void executeCommand(const std::vector<std::string>& commandArgs);
 
 private:
     RedisClient redisClient;

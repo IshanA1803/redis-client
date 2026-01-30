@@ -6,20 +6,27 @@ int main(int argc,char* argv[]){
     std::string host="127.0.0.1"; //default host
     int port=6379; //default port
 
+    std::vector<std::string> commandArgs;//to hold one-shot command arguments
+    
     int i=1; //start from 1 to skip program name
-    while(i<argc){
-        std::string arg=argv[i];
-        if(arg=="-h" && i+1<argc){
-            host=argv[++i];
-        }else if(arg=="-p" && i+1<argc){
-            port=std::stoi(argv[++i]);
-        }else{
-            break; //stop parsing on unknown argument
+    while (i < argc) {
+        std::string arg = argv[i];
+        if (arg == "-h" && i + 1 < argc) {
+            host = argv[++i];
+        } else if (arg == "-p" && i + 1 < argc) {
+            port = std::stoi(argv[++i]);
+        } else {
+            // remaining args are a one-shot command
+            while (i < argc) {
+                commandArgs.push_back(argv[i]);
+                i++;
+            }
+            break;
         }
         i++;
     }
 
     CLI cli(host,port);
-    cli.run();
+    cli.run(commandArgs);
     return 0;
 }
