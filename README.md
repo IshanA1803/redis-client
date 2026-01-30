@@ -46,15 +46,15 @@ Execute a single Redis command directly from the shell:
 
 Client/
 
-├── main.cpp            # Argument parsing and entry point
+├── main.cpp &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Argument parsing and entry point
 
-├── CLI.\*     		# REPL, event loop, pub/sub handling
+├── CLI.\*   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # REPL, event loop, pub/sub handling
 
-├── RedisClient.\*       # TCP connection management
+├── RedisClient.\*  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # TCP connection management
 
-├── CommandHandler.\*    # Command parsing and RESP formatting
+├── CommandHandler.\* &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Command parsing and RESP formatting
 
-├── ResponseParser.\*    # RESP2 response parsing
+├── ResponseParser.\*  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  # RESP2 response parsing
 
 Makefile
 
@@ -95,7 +95,9 @@ PONG
 ### One-Shot Mode
 
 ./bin/my\_redis\_cli SET key value
+
 ./bin/my\_redis\_cli GET key
+
 
 ### Pub/Sub Example
 
@@ -103,20 +105,31 @@ Terminal 1:
 ./bin/my\_redis\_cli
 
 127.0.0.1:6379> SUBSCRIBE news
+
 (Subscribed) Type 'exit' or 'quit' to leave subscription mode.
+
 
 Terminal 2:
 redis-cli PUBLISH news "hello"
 
+
 Terminal 1 output:
+
 message
+
 news
+
 hello
 
+
 Exit subscription mode:
+
 exit
+
 (Exited subscription mode)
+
 127.0.0.1:6379>
+
 
 ## Protocol Support
 
