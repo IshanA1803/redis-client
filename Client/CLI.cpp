@@ -32,7 +32,7 @@ static std::string trim(const std::string &s) {
 }
 
 CLI::CLI(const std::string &host, int port) 
-    : redisClient(host, port) {}
+    : host(host),port(port),redisClient(host, port) {}
 
 void CLI::run(const std::vector<std::string>& commandArgs) {
     if (!redisClient.connectToServer()) {
@@ -49,9 +49,6 @@ void CLI::run(const std::vector<std::string>& commandArgs) {
     // INTERACTIVE MODE
     int sockfd = redisClient.getSocketFD();
     std::cout << "Connected to Redis at "<< sockfd << "\n";
-
-    std::string host = "127.0.0.1"; //Dummy host
-    int port = 6379; //Dummy port
 
     // Setup poll for stdin and redis socket
     struct pollfd fds[2];

@@ -14,6 +14,8 @@ public:
     void executeCommand(const std::vector<std::string>& commandArgs);
 
 private:
+    std::string host;
+    int port;
     RedisClient redisClient;
 };
 
