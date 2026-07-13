@@ -31,6 +31,34 @@ static std::string trim(const std::string &s) {
     return s.substr(start, end - start + 1);
 }
 
+void printHelp() {
+    std::cout << "my_redis_cli 1.0.0\n"
+              << "Usage: \n"
+              << "      With arguments:            ./my_redis_cli -h <host> -p <port>\n"
+              << "      Default Host (127.0.0.1):  ./my_redis_cli -p <port>\n"
+              << "      Default Port (6379):       ./my_redis_cli -h <host>\n"
+              << "      One-shot execution:        ./my_redis_cli <command> [arguments]\n"
+              << "\n"
+              << "Interactive Mode (REPL):\n"
+              << "      ./my_redis_cli\n"
+              << "      Type Redis commands directly.\n"
+              << "\n"
+              << "To get help about Redis commands type:\n"
+              << "      \"help\" to display this help message\n"
+              << "      \"quit\" to exit\n"
+              << "\n"
+              << "Examples:\n"
+              << "      ./my_redis_cli PING\n"
+              << "      ./my_redis_cli SET mykey \"Hello World\"\n"
+              << "      ./my_redis_cli GET mykey\n"
+              << "\n"
+              << "To set my_redis_cli preferences:\n"
+              << "      \":set hints\" enable online hints\n"
+              << "      \":set nohints\" disable online hints\n"
+              << "Set your preferences in ~/.myredisclirc\n"
+              << std::endl;
+}
+
 CLI::CLI(const std::string &host, int port) 
     : host(host),port(port),redisClient(host, port) {}
 
@@ -99,7 +127,7 @@ void CLI::run(const std::vector<std::string>& commandArgs) {
             }
 
             if (line == "help") {
-                std::cout << "Displaing help\n";
+                printHelp();
                 rl_on_new_line();
                 rl_redisplay();
                 continue;
